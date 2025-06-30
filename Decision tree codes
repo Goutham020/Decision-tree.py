@@ -1,0 +1,74 @@
+# 1. Import Required Libraries
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.model_selection import train_test_split, cross_val_score
+from sklearn.tree import DecisionTreeClassifier, plot_tree
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
+
+# 2. Load the Dataset
+file_path = r"C:\Users\Admin\Downloads\archive (2)\heart.csv"
+df = pd.read_csv(file_path)
+
+# 3. Explore the Data
+print("First 5 rows:\n", df.head())
+print("\nMissing values:\n", df.isnull().sum())
+print("\nDataset shape:", df.shape)
+
+# 4. Feature and Target Separation
+X = df.drop('target', axis=1)
+y = df['target']
+
+# 5. Train-Test Split
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# 6. Train Decision Tree Classifier
+dtree = DecisionTreeClassifier(random_state=42)
+dtree.fit(X_train, y_train)
+
+# 7. Visualize Decision Tree
+plt.figure(figsize=(20,10))
+plot_tree(dtree, feature_names=X.columns, class_names=["No Disease", "Disease"], filled=True)
+plt.title("Decision Tree")
+plt.show()
+
+# 8. Evaluate Decision Tree
+y_pred_dt = dtree.predict(X_test)
+print("\nDecision Tree Accuracy:", accuracy_score(y_test, y_pred_dt))
+print("\nClassification Report:\n", classification_report(y_test, y_pred_dt))
+
+# 9. Limit Depth to Prevent Overfitting
+dtree_limited = DecisionTreeClassifier(max_depth=3, random_state=42)
+dtree_limited.fit(X_train, y_train)
+y_pred_limited = dtree_limited.predict(X_test)
+print("\nLimited Depth Accuracy:", accuracy_score(y_test, y_pred_limited))
+
+# 10. Train Random Forest Classifier
+rf = RandomForestClassifier(n_estimators=100, random_state=42)
+rf.fit(X_train, y_train)
+y_pred_rf = rf.predict(X_test)
+print("\nRandom Forest Accuracy:", accuracy_score(y_test, y_pred_rf))
+
+# 11. Feature Importances
+importances = pd.Series(rf.feature_importances_, index=X.columns)
+plt.figure(figsize=(10,6))
+importances.sort_values().plot(kind='barh', color='skyblue')
+plt.title("Feature Importances")
+plt.xlabel("Importance Score")
+plt.show()
+
+# 12. Cross-validation Accuracy
+cv_scores = cross_val_score(rf, X, y, cv=5)
+print("\nCross-validation scores:", cv_scores)
+print("Average CV accuracy:", np.mean(cv_scores))
+
+# 13. Confusion Matrix for RF
+cm = confusion_matrix(y_test, y_pred_rf)
+sns.heatmap(cm, annot=True, fmt='d', cmap='Greens')
+plt.title("Random Forest Confusion Matrix")
+plt.xlabel("Predicted")
+plt.ylabel("Actual")
+plt.show()
+
